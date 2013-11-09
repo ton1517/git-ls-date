@@ -36,6 +36,8 @@ Options:
 """
 from subprocess import Popen, PIPE
 import sys
+import getopt
+import re
 
 #=======================================
 # config
@@ -48,6 +50,67 @@ _description = 'git-ls-date is git sub command shows first and last commit date.
 _url = 'https://github.com/ton1517/git-ls-date'
 _author = 'ton1517'
 _author_email = 'tonton1517@gmail.com'
+
+def help():
+    version()
+    print("\n%s\n%s\nby %s <%s>\n" % (_description, _url, _author, _author_email))
+    usage()
+
+def usage():
+    print(__doc__)
+
+def version():
+    print("%s %s" % (_name, _version))
+
+class Configuration(object):
+    """parse comannd option and set configuration."""
+
+    shortopts = "hvd:"
+    longopts = ["help", "version", "date="]
+
+    def __init__(self):
+        self.paths = None
+        self.date = None
+        self.__config_hash = {}
+        self.__read_gitconfig()
+
+    def __read_gitconfig(self):
+        config_lines = git("config --get-regexp " + _name).split("\n")[:-1]
+
+        config_re = re.compile("%s\.(.*) (.*)" % _name)
+        for line in config_lines:
+            result = config_re.search(line)
+            self.__config_hash[result.group(1)] = result.group(2)
+
+        self.date = self.__config_hash.get("date", "local")
+
+    def argparse(self, args = []):
+        """parse commandline arguments.
+        Arg : commandline arguments. you should exclude commandline name.
+                for example 'configuration.argparse(sys.argv[1:])'
+        """
+        try:
+            opts, args = getopt.getopt(args, self.shortopts, self.longopts)
+        except getopt.GetoptError as e:
+            usage()
+            sys.exit(1)
+
+        self.pathes = args
+
+        for opt, value in opts:
+            value = value.strip()
+
+            if opt == "--help" or opt == "-h":
+                help()
+                sys.exit()
+            elif opt == "--version" or opt == "-v":
+                version()
+                sys.exit()
+            elif opt == "--date" or opt == "-d":
+                self.date = value
+            else:
+                usage()
+                sys.exit(1)
 
 #=======================================
 # git
