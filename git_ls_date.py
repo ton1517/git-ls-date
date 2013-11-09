@@ -22,11 +22,12 @@ _author_email = 'tonton1517@gmail.com'
 class GitCommandErrorException(Exception):
     """if git returns error, raise this exception."""
 
-    def __init__(self, message):
+    def __init__(self, command, message):
         self.message = message
+        self.command = command
 
     def __str__(self):
-        return self.message
+        return self.command + "\n" + self.message
 
 def git(cmd):
     """run git command.

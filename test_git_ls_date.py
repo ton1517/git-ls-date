@@ -5,15 +5,16 @@ from git_ls_date import *
 class TestGitCommandErrorException(object):
 
     message = "error message"
+    git_cmd = "git log"
 
     def test_GitCommandErrorException(self):
-        e = GitCommandErrorException(self.message)
+        e = GitCommandErrorException(self.git_cmd, self.message)
 
-        eq_(str(e), self.message)
+        eq_(str(e), self.git_cmd+"\n"+self.message)
 
     @raises(GitCommandErrorException)
     def test_raise_GitCommandErrorException(self):
-        e = GitCommandErrorException(self.message)
+        e = GitCommandErrorException(self.git_cmd, self.message)
         raise e
 
 class TestGit(object):
