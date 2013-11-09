@@ -3,7 +3,7 @@
 import os
 from mock import Mock
 from nose.tools import *
-from git_ls_date import *
+import git_ls_date
 
 class TestGitCommandErrorException(object):
 
@@ -11,24 +11,24 @@ class TestGitCommandErrorException(object):
     git_cmd = "git log"
 
     def test_GitCommandErrorException(self):
-        e = GitCommandErrorException(self.git_cmd, self.message)
+        e = git_ls_date.GitCommandErrorException(self.git_cmd, self.message)
 
         eq_(str(e), self.git_cmd+"\n"+self.message)
 
-    @raises(GitCommandErrorException)
+    @raises(git_ls_date.GitCommandErrorException)
     def test_raise_GitCommandErrorException(self):
-        e = GitCommandErrorException(self.git_cmd, self.message)
+        e = git_ls_date.GitCommandErrorException(self.git_cmd, self.message)
         raise e
 
 class TestGit(object):
 
     def test_command(self):
-        output = git("--version")
+        output = git_ls_date.git("--version")
         ok_("git version" in output)
 
-    @raises(GitCommandErrorException)
+    @raises(git_ls_date.GitCommandErrorException)
     def test_raise(self):
-        git("hoge")
+        git_ls_date.git("hoge")
 
 class TestFilesParser(object):
 
@@ -59,7 +59,7 @@ class TestFilesParser(object):
         files = ["testfiles/testfile1", "testfiles/testfile2", "testfiles/testfile3", "testfiles/testdirectory/testfile4"]
         files.sort()
 
-        parser = FilesParser(path)
+        parser = git_ls_date.FilesParser(path)
         self.check_files(parser, files, files)
 
 
@@ -67,13 +67,13 @@ class TestFilesParser(object):
         pathes = ["testfiles/testfile1", "testfiles/testfile2"]
         files = ["testfiles/testfile1", "testfiles/testfile2"]
 
-        parser = FilesParser(pathes)
+        parser = git_ls_date.FilesParser(pathes)
         self.check_files(parser, files, files)
 
     def test_no_arg(self):
         files = [".gitignore", ".python-version", "LICENSE", "README.rst", "git_ls_date.py", "setup.py", "test_git_ls_date.py", "testfiles/testdirectory/testfile4", "testfiles/testfile1", "testfiles/testfile2", "testfiles/testfile3", "tox.ini"]
 
-        parser = FilesParser()
+        parser = git_ls_date.FilesParser()
         self.check_files(parser, files, files)
 
     def test_under_directory(self):
@@ -81,12 +81,12 @@ class TestFilesParser(object):
         files = ["testfile1", "testfile2", "testfile3", "testdirectory/testfile4"]
         files_full = ["testfiles/testfile1", "testfiles/testfile2", "testfiles/testfile3", "testfiles/testdirectory/testfile4"]
 
-        parser = FilesParser()
+        parser = git_ls_date.FilesParser()
         self.check_files(parser, files, files_full)
 
     def test_wrong_path(self):
         wrong_file = "hoge"
-        parser = FilesParser(wrong_file)
+        parser = git_ls_date.FilesParser(wrong_file)
 
         eq_(parser.files, [])
         eq_(parser.files_full, [])
@@ -178,14 +178,14 @@ class TestLogParser(object):
         eq_(correct_commit.date, commit.date)
 
     def test_commits(self):
-        log_parser = LogParser(self.files_parser_mock, "raw")
+        log_parser = git_ls_date.LogParser(self.files_parser_mock, "raw")
 
         eq_(len(self.correct_commits_raw), len(log_parser.commits))
 
         for i, commit in enumerate(log_parser.commits):
             self.eq_commit(self.correct_commits_raw[i], commit)
 
-        log_parser = LogParser(self.files_parser_mock, "iso")
+        log_parser = git_ls_date.LogParser(self.files_parser_mock, "iso")
         eq_(len(self.correct_commits_iso), len(log_parser.commits))
 
         for i, commit in enumerate(log_parser.commits):
@@ -201,7 +201,7 @@ class TestLogParser(object):
                 "testdirectory/testfile4": [commits[3]]
             }
 
-        log_parser = LogParser(self.files_parser_mock, "raw")
+        log_parser = git_ls_date.LogParser(self.files_parser_mock, "raw")
 
         for file in file_commits_hash.keys():
             correct_commits = file_commits_hash[file]
@@ -217,14 +217,14 @@ class TestLogParser(object):
             self.eq_commit(correct_commits[-1], log_parser.get_first_commit_contains(file))
 
     def test_not_contains(self):
-        log_parser = LogParser(self.files_parser_mock, "raw")
+        log_parser = git_ls_date.LogParser(self.files_parser_mock, "raw")
 
         eq_(None, log_parser.get_commits_contains("hoge"))
         eq_(None, log_parser.get_first_commit_contains("hoge"))
         eq_(None, log_parser.get_last_commit_contains("hoge"))
 
 
-    @raises(GitCommandErrorException)
+    @raises(git_ls_date.GitCommandErrorException)
     def test_date_option_error(self):
-        log_parser = LogParser(self.files_parser_mock, "hoge")
+        log_parser = git_ls_date.LogParser(self.files_parser_mock, "hoge")
 
