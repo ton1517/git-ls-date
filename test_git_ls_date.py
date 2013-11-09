@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+from mock import Mock
 from nose.tools import *
 from git_ls_date import *
 
@@ -92,4 +93,138 @@ class TestFilesParser(object):
 
         eq_(parser.get_full(wrong_file), None)
         eq_(parser.get_abbrev(wrong_file), None)
+
+class TestLogParser(object):
+
+    def setup(self):
+
+        # create FilesParser Mock
+
+        pathes = ["testfiles"]
+        files = ["testfile1", "testfile2", "testfile3", "testdirectory/testfile4"]
+        files_full = ["testfiles/testfile1", "testfiles/testfile2", "testfiles/testfile3", "testfiles/testdirectory/testfile4"]
+
+        abbrev_to_full_dict = {
+                "testfile1":"testfiles/testfile1",
+                "testfile2":"testfiles/testfile2",
+                "testfile3":"testfiles/testfile3",
+                "testdirectory/testfile4":"testfiles/testdirectory/testfile4",
+                "testfiles/testfile1":"testfiles/testfile1",
+                "testfiles/testfile2":"testfiles/testfile2",
+                "testfiles/testfile3":"testfiles/testfile3",
+                "testfiles/testdirectory/testfile4":"testfiles/testdirectory/testfile4"
+        }
+
+        full_to_abbrev_dict = {
+                "testfile1":"testfile1",
+                "testfile2":"tetfile2",
+                "testfile3":"testfile3",
+                "testdirectory/testfile4":"testdirectory/testfile4",
+                "testfiles/testfile1":"testfile1",
+                "testfiles/testfile2":"testfile2",
+                "testfiles/testfile3":"testfile3",
+                "testfiles/testdirectory/testfile4":"testdirectory/testfile4"
+        }
+
+        def get_full(file):
+            return abbrev_to_full_dict.get(file)
+
+        def get_abbrev(file):
+            return full_to_abbrev_dict.get(file)
+
+        self.files_parser_mock = Mock()
+        self.files_parser_mock.pathes = pathes
+        self.files_parser_mock.files = files
+        self.files_parser_mock.files_full = files_full
+
+        get_full_mock = Mock()
+        get_full_mock.side_effect = get_full
+        self.files_parser_mock.get_full = get_full_mock
+
+        get_abbrev_mock = Mock()
+        get_abbrev_mock.side_effect = get_abbrev
+        self.files_parser_mock.get_abbrev = get_abbrev_mock
+
+        # create commit mocks
+
+        self.correct_commits_raw = [
+            self.create_commit_mock("b9720cf", "1383998635 +0900"),
+            self.create_commit_mock("d8cd0a2", "1383991898 +0900"),
+            self.create_commit_mock("0adbbd6", "1383977357 +0900"),
+            self.create_commit_mock("b14e272", "1383977226 +0900"),
+            self.create_commit_mock("e5fa5ad", "1383976796 +0900"),
+            self.create_commit_mock("da5e0fa", "1383975672 +0900"),
+            self.create_commit_mock("586fb9d", "1383975617 +0900")
+        ]
+
+        self.correct_commits_iso = [
+            self.create_commit_mock("b9720cf", "2013-11-09 21:03:55 +0900"),
+            self.create_commit_mock("d8cd0a2", "2013-11-09 19:11:38 +0900"),
+            self.create_commit_mock("0adbbd6", "2013-11-09 15:09:17 +0900"),
+            self.create_commit_mock("b14e272", "2013-11-09 15:07:06 +0900"),
+            self.create_commit_mock("e5fa5ad", "2013-11-09 14:59:56 +0900"),
+            self.create_commit_mock("da5e0fa", "2013-11-09 14:41:12 +0900"),
+            self.create_commit_mock("586fb9d", "2013-11-09 14:40:17 +0900")
+        ]
+
+    def create_commit_mock(self, hash, date):
+        commit = Mock()
+        commit.date = date
+        commit.hash = hash
+        return commit
+
+    def eq_commit(self, correct_commit, commit):
+        eq_(correct_commit.hash, commit.hash)
+        eq_(correct_commit.date, commit.date)
+
+    def test_commits(self):
+        log_parser = LogParser(self.files_parser_mock, "raw")
+
+        eq_(len(self.correct_commits_raw), len(log_parser.commits))
+
+        for i, commit in enumerate(log_parser.commits):
+            self.eq_commit(self.correct_commits_raw[i], commit)
+
+        log_parser = LogParser(self.files_parser_mock, "iso")
+        eq_(len(self.correct_commits_iso), len(log_parser.commits))
+
+        for i, commit in enumerate(log_parser.commits):
+            self.eq_commit(self.correct_commits_iso[i], commit)
+
+    def test_contains(self):
+        commits = self.correct_commits_raw
+
+        file_commits_hash = {
+                "testfile1": [commits[0], commits[2], commits[6]],
+                "testfile2": [commits[1], commits[5]],
+                "testfile3": [commits[1], commits[4]],
+                "testdirectory/testfile4": [commits[3]]
+            }
+
+        log_parser = LogParser(self.files_parser_mock, "raw")
+
+        for file in file_commits_hash.keys():
+            correct_commits = file_commits_hash[file]
+            commits = log_parser.get_commits_contains(file)
+
+            eq_(len(correct_commits), len(commits))
+
+            for i, commit in enumerate(commits):
+                correct_commit = correct_commits[i]
+                self.eq_commit(correct_commit, commit)
+
+            self.eq_commit(correct_commits[0], log_parser.get_last_commit_contains(file))
+            self.eq_commit(correct_commits[-1], log_parser.get_first_commit_contains(file))
+
+    def test_not_contains(self):
+        log_parser = LogParser(self.files_parser_mock, "raw")
+
+        eq_(None, log_parser.get_commits_contains("hoge"))
+        eq_(None, log_parser.get_first_commit_contains("hoge"))
+        eq_(None, log_parser.get_last_commit_contains("hoge"))
+
+
+    @raises(GitCommandErrorException)
+    def test_date_option_error(self):
+        log_parser = LogParser(self.files_parser_mock, "hoge")
 
