@@ -94,6 +94,79 @@ class FilesParser(object):
 
         return self.__full_to_abbrev.get(full_path)
 
+class LogParser(object):
+    """LogParser runs 'git log' and parse."""
+
+    log_format = "log --oneline --name-only --no-merges --pretty=format:'%h %ad' --date="
+
+    def __init__(self, files_parser, date_option = None):
+        self.files_parser = files_parser
+        self.date_option = date_option
+
+        self.commits = []
+        self.__commit_contains_file_hash = {}
+
+        self.files_quote = ["\'%s\'"%f for f in self.files_parser.files]
+        self.log_format += date_option if date_option else "local"
+        self.log_format_no_file += date_option if date_option else "local"
+
+        self.__parse_log()
+
+    def __parse_log(self):
+        log_str = git(self.log_format+" "+" ".join(self.files_quote))[:-1].split("\n\n")
+
+        for l in log_str:
+            one_commit = l.split("\n")
+            date, hash, files = self.__parse_one_commit_contains_filename(one_commit)
+            commit = Commit(date, hash)
+            self.commits.append(commit)
+
+            for f in files:
+                self.__append_commit(f, commit)
+
+    def __append_commit(self, key_file, commit):
+        commit_list = self.__commit_contains_file_hash.get(key_file, [])
+        commit_list.append(commit)
+        self.__commit_contains_file_hash[key_file] = commit_list
+
+    def __parse_one_commit_contains_filename(self, one_commit):
+        commit_info = one_commit[0]
+        date, hash = self.__parse_one_commit(commit_info)
+        files = one_commit[1:]
+        return date, hash, files
+
+    def __parse_one_commit(self, one_commit):
+        return one_commit[8:], one_commit[:7]
+
+    def get_commits_contains(self, file):
+        """return commits that contains file.
+        Arg : filename
+        Return : commit list
+        """
+
+        full_path = self.files_parser.get_full(file)
+        commits = self.__commit_contains_file_hash.get(full_path)
+
+        return commits
+
+    def get_first_commit_contains(self, file):
+        """return commit that file are changed last.
+        Arg : filename
+        Return : commit object
+        """
+
+        commits = self.get_commits_contains(file)
+        return commits[-1] if commits else None
+
+    def get_last_commit_contains(self, file):
+        """return commit that file are added first.
+        Arg : filename
+        Return : commit object
+        """
+
+        commits = self.get_commits_contains(file)
+        return commits[0] if commits else None
+
 #=======================================
 # main
 #=======================================
