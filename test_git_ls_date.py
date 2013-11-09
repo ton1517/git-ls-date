@@ -5,6 +5,96 @@ from mock import Mock
 from nose.tools import *
 import git_ls_date
 
+class TestConfiguration(object):
+
+    @raises(SystemExit)
+    def test_help1(self):
+        config = git_ls_date.Configuration()
+        config.argparse(["-h"])
+
+    @raises(SystemExit)
+    def test_help2(self):
+        config = git_ls_date.Configuration()
+        config.argparse(["--help"])
+
+    @raises(SystemExit)
+    def test_version1(self):
+        config = git_ls_date.Configuration()
+        config.argparse(["-v"])
+
+    @raises(SystemExit)
+    def test_version2(self):
+        config = git_ls_date.Configuration()
+        config.argparse(["--version"])
+
+    @raises(SystemExit)
+    def test_invalid_option(self):
+        config = git_ls_date.Configuration()
+        config.argparse(["--bar"])
+
+    def check_date(self, date):
+        config = git_ls_date.Configuration()
+        config.argparse(["-d  "+date])
+        eq_(config.date, date)
+
+    def test_date(self):
+        self.check_date("relative")
+        self.check_date("local")
+        self.check_date("iso")
+        self.check_date("rfc")
+        self.check_date("short")
+        self.check_date("raw")
+        self.check_date("default")
+
+class TestIgnoreGitConfig(object):
+
+    def setup(self):
+        global git_ls_date
+        self.__orig_git = git_ls_date.git
+
+        def git_side(cmd):
+            if cmd == "config --get-regexp git-ls-date":
+                return ""
+            else:
+                self.__orig_git(cmd)
+
+        git_ls_date.git = Mock(side_effect=git_side)
+
+    def teardown(self):
+        global git_ls_date
+        git_ls_date.git = self.__orig_git
+
+    def test_date_default(self):
+        config = git_ls_date.Configuration()
+        config.argparse()
+
+        eq_(config.date, "local")
+
+class TestGitConfig(object):
+
+    def setup(self):
+        global git_ls_date
+        self.__orig_git = git_ls_date.git
+
+        def git_side(cmd):
+            if cmd == "config --get-regexp git-ls-date":
+                return "git-ls-date.date relative\n"
+            else:
+                self.__orig_git(cmd)
+
+        git_ls_date.git = Mock(side_effect=git_side)
+
+    def teardown(self):
+        global git_ls_date
+        git_ls_date.git = self.__orig_git
+
+    def test_read_gitconfig(self):
+        config = git_ls_date.Configuration()
+        config.argparse()
+
+        eq_(config.date, "relative")
+
+
 class TestGitCommandErrorException(object):
 
     message = "error message"
