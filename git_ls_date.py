@@ -58,12 +58,18 @@ class FilesParser(object):
     def __init__(self, pathes = []):
         self.pathes = pathes if type(pathes) is list else [pathes]
 
+        self.__abbrev_to_full = {}
+        self.__full_to_abbrev = {}
+
+        self.files = None
+        self.files_full = None
+
+        self.__parse_files()
+
+    def __parse_files(self):
         args = " ".join(["\'%s\'" % f for f in self.pathes])
         self.files = git("ls-files "+args).split("\n")[:-1]
         self.files_full = git("ls-files --full-name "+args).split("\n")[:-1]
-
-        self.__abbrev_to_full = {}
-        self.__full_to_abbrev = {}
 
         for i, f in enumerate(self.files):
             full = self.files_full[i]
