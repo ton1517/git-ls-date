@@ -50,7 +50,7 @@ class Commit(object):
         self.hash = hash
 
     def __str__(self):
-        return "%s %s " % (self.date, self.hash)
+        return "%s %s" % (self.date, self.hash)
 
 class FilesParser(object):
     """FilesParser run 'git ls-files' and parse."""
