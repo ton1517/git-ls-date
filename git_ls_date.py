@@ -38,16 +38,15 @@ def git(cmd):
     stdout, stderr = Popen("git " + cmd, shell=True, stdout=PIPE, stdin=PIPE, stderr=PIPE).communicate()
 
     if stderr:
-        raise GitCommandErrorException(stderr.decode())
+        raise GitCommandErrorException(cmd, stderr.decode())
 
     return stdout.decode()
 
 class Commit(object):
 
-    def __init__(self, date, hash, files):
+    def __init__(self, date, hash):
         self.date = date
         self.hash = hash
-        self.files = files
 
     def __str__(self):
         return "%s %s " % (self.date, self.hash)
