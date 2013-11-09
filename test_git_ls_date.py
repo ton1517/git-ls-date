@@ -83,3 +83,13 @@ class TestFilesParser(object):
         parser = FilesParser()
         self.check_files(parser, files, files_full)
 
+    def test_wrong_path(self):
+        wrong_file = "hoge"
+        parser = FilesParser(wrong_file)
+
+        eq_(parser.files, [])
+        eq_(parser.files_full, [])
+
+        eq_(parser.get_full(wrong_file), None)
+        eq_(parser.get_abbrev(wrong_file), None)
+
