@@ -60,7 +60,7 @@ import re
 #=======================================
 
 _name = 'git-ls-date'
-_version = '0.0.1'
+_version = '0.1.0'
 _license = 'MIT License'
 _description = 'git-ls-date is git sub command shows first and last commit date.'
 _url = 'https://github.com/ton1517/git-ls-date'
