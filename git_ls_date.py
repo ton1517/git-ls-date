@@ -82,7 +82,7 @@ class Configuration(object):
     def __read_gitconfig(self):
         config_lines = git("config --get-regexp " + _name).split("\n")[:-1]
 
-        config_re = re.compile("%s\.(.*) (.*)" % _name)
+        config_re = re.compile("%s\.(.*?) (.*)" % _name)
         for line in config_lines:
             result = config_re.search(line)
             self.__config_hash[result.group(1)] = result.group(2)
