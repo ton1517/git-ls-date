@@ -296,7 +296,22 @@ class LogParser(object):
 #=======================================
 
 def main():
-    pass
+
+    try:
+        config = Configuration()
+        config.argparse(sys.argv[1:])
+
+        files_parser = FilesParser(config.pathes)
+        parser = LogParser(files_parser, config.date)
+    except GitCommandErrorException as e:
+        print(e)
+        sys.exit(1)
+
+    for f in files_parser.files:
+        fc = parser.get_first_commit_contains(f)
+        lc = parser.get_last_commit_contains(f)
+        formatted_info = config.format.format(fd=fc.date, fh=fc.hash, ld=lc.date, lh=lc.hash, f=f)
+        print(formatted_info)
 
 if __name__ == "__main__":
     main()
