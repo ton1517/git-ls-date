@@ -32,8 +32,8 @@ Usage:
 Options:
   -h --help                                             Show help.
   -v --version                                          Show version.
-  -d --date=(relative|local|default|iso|rfc|short|raw)  Date option.
-  -f --format=<format>                                  Show-format option. See SHOW FORMAT.
+  -d --date=(relative|local|default|iso|rfc|short|raw)  Date option.(default: short)
+  -f --format=<format>                                  Show-format option. See SHOW FORMAT.(default: "{fd} {fh}  {ld} {lh}  {f}")
 
 SHOW FORMAT:
 
@@ -46,6 +46,8 @@ SHOW FORMAT:
     * {lh}: last commit hash
     * {fh}: first commit hash
     * {f}:  filename
+
+See https://github.com/ton1517/git-ls-date
 """
 
 from subprocess import Popen, PIPE
