@@ -168,7 +168,7 @@ class TestFilesParser(object):
         self.check_files(parser, files, files)
 
     def test_no_arg(self):
-        files = [".gitignore", ".python-version", "LICENSE", "README.rst", "git_ls_date.py", "setup.py", "test_git_ls_date.py", "testfiles/testdirectory/testfile4", "testfiles/testfile1", "testfiles/testfile2", "testfiles/testfile3", "tox.ini"]
+        files = [".gitignore", ".python-version", "LICENSE", "MANIFEST.in", "README.rst", "git_ls_date.py", "setup.py", "test_git_ls_date.py", "testfiles/testdirectory/testfile4", "testfiles/testfile1", "testfiles/testfile2", "testfiles/testfile3", "tox.ini"]
 
         parser = git_ls_date.FilesParser()
         self.check_files(parser, files, files)
