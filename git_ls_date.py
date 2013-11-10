@@ -68,11 +68,16 @@ class Configuration(object):
     shortopts = "hvd:"
     longopts = ["help", "version", "date="]
 
+    date_default = "short"
+
     def __init__(self):
         self.paths = None
         self.date = None
         self.__config_hash = {}
+
         self.__read_gitconfig()
+
+        self.date = self.__config_hash.get("date", self.date_default)
 
     def __read_gitconfig(self):
         config_lines = git("config --get-regexp " + _name).split("\n")[:-1]
@@ -81,8 +86,6 @@ class Configuration(object):
         for line in config_lines:
             result = config_re.search(line)
             self.__config_hash[result.group(1)] = result.group(2)
-
-        self.date = self.__config_hash.get("date", "local")
 
     def argparse(self, args = []):
         """parse commandline arguments.

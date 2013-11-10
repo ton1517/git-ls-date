@@ -34,7 +34,7 @@ class TestConfiguration(object):
 
     def check_date(self, date):
         config = git_ls_date.Configuration()
-        config.argparse(["-d  "+date])
+        config.argparse(["-d", date])
         eq_(config.date, date)
 
     def test_date(self):
@@ -68,7 +68,7 @@ class TestIgnoreGitConfig(object):
         config = git_ls_date.Configuration()
         config.argparse()
 
-        eq_(config.date, "local")
+        eq_(config.date, "short")
 
 class TestGitConfig(object):
 
