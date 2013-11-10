@@ -64,6 +64,13 @@ Sort files by last commit date
     2013-11-10 18:28:24 +0900 git_ls_date.py
     2013-11-10 19:45:40 +0900 MANIFEST.in
 
+Requirements
+============
+
+- Python 2.6 / 2.7 / 3.2 / 3.3 or higher
+
+I'm testing with 2.6.8, 2.7.5, 3.2.5, 3.3.2.
+
 Installation
 ============
 
