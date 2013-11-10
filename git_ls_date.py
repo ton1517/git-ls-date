@@ -223,8 +223,7 @@ class FilesParser(object):
 class LogParser(object):
     """LogParser runs 'git log' and parse."""
 
-    log_format = "log --oneline --name-only --no-merges --author-date-order --pretty=format:'%h %ad' --date="
-    log_format_no_file = "log --oneline --author-date-order --pretty=format:'%h %ad' --date="
+    log_format = "log --oneline --name-only --author-date-order -c --pretty=format:'%h %ad' --date="
 
     def __init__(self, files_parser, date_option = None):
         self.files_parser = files_parser
@@ -235,7 +234,6 @@ class LogParser(object):
 
         self.files_quote = ["\'%s\'"%f for f in self.files_parser.files]
         self.log_format += date_option if date_option else "local"
-        self.log_format_no_file += date_option if date_option else "local"
 
         self.__parse_log()
 
@@ -265,21 +263,6 @@ class LogParser(object):
     def __parse_one_commit(self, one_commit):
         return one_commit[8:], one_commit[:7]
 
-    def __retry_parse_log_with(self, file):
-
-        # if there are diff in merge commit, don't show diff with git log...
-        # when the file diff is in only merge commit, rerun git log...
-
-        log_str = git(self.log_format_no_file+" "+file)[:-1].split("\n")
-
-        for l in log_str:
-            date, hash = self.__parse_one_commit(l)
-            commit = Commit(date, hash)
-            self.commits.append(commit)
-            self.__append_commit(file, commit)
-
-        return self.__commit_contains_file_hash.get(file, [])
-
     def get_commits_contains(self, file):
         """return commits that contains file.
         Arg : filename
@@ -288,10 +271,6 @@ class LogParser(object):
 
         full_path = self.files_parser.get_full(file)
         commits = self.__commit_contains_file_hash.get(full_path)
-
-        if full_path and commits is None:
-            commits = self.__retry_parse_log_with(file)
-
         return commits
 
     def get_first_commit_contains(self, file):
