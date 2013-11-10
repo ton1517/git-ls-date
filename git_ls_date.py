@@ -25,15 +25,29 @@
 """git-ls-date
 
 Usage:
-  git ls-date [--date=<format>] [<path>]...
+  git ls-date [--date=<option>] [--format=<format>] [<path>]...
   git ls-date -h | --help
   git ls-date -v | --version
 
 Options:
   -h --help                                             Show help.
   -v --version                                          Show version.
-  -d --date=(relative|local|default|iso|rfc|short|raw)  date format option.
+  -d --date=(relative|local|default|iso|rfc|short|raw)  Date option.
+  -f --format=<format>                                  Show-format option. See SHOW FORMAT.
+
+SHOW FORMAT:
+
+  --format option allows you to specify which information you want to show.
+
+  placeholders:
+
+    * {ld}: last commit date
+    * {fd}: first commit date
+    * {lh}: last commit hash
+    * {fh}: first commit hash
+    * {f}:  filename
 """
+
 from subprocess import Popen, PIPE
 import sys
 import getopt
@@ -65,10 +79,11 @@ def version():
 class Configuration(object):
     """parse comannd option and set configuration."""
 
-    shortopts = "hvd:"
-    longopts = ["help", "version", "date="]
+    shortopts = "hvd:f:"
+    longopts = ["help", "version", "date=", "format="]
 
     date_default = "short"
+    format_default =  "{fd} {fh}  {ld} {lh}  {f}"
 
     def __init__(self):
         self.paths = None
@@ -78,6 +93,7 @@ class Configuration(object):
         self.__read_gitconfig()
 
         self.date = self.__config_hash.get("date", self.date_default)
+        self.format = self.__config_hash.get("format",self.format_default)
 
     def __read_gitconfig(self):
         config_lines = git("config --get-regexp " + _name).split("\n")[:-1]
@@ -111,6 +127,15 @@ class Configuration(object):
                 sys.exit()
             elif opt == "--date" or opt == "-d":
                 self.date = value
+            elif opt == "--format" or opt == "-f":
+                self.format = value
+                try:
+                    self.format.format(ld="",fd="",lh="",fh="",f="")
+                except (KeyError, ValueError) as e:
+                    print("Invalid format error.")
+                    print(e)
+                    sys.exit(1)
+
             else:
                 usage()
                 sys.exit(1)

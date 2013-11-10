@@ -46,6 +46,13 @@ class TestConfiguration(object):
         self.check_date("raw")
         self.check_date("default")
 
+    def test_format(self):
+        opt = "{ld} {lh} {fd} {fh} {f}"
+        config = git_ls_date.Configuration()
+        config.argparse(['--format', opt])
+        eq_(config.format, opt)
+
+
 class TestIgnoreGitConfig(object):
 
     def setup(self):
