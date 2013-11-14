@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from mock import Mock
+from mock import Mock, patch
 from nose.tools import *
 import git_ls_date
 
@@ -52,55 +52,29 @@ class TestConfiguration(object):
         config.argparse(['--format', opt])
         eq_(config.format, opt)
 
+    def git_ignore_config(cmd):
+        if cmd == "config --get-regexp git-ls-date":
+            return ""
+        else:
+            return git_ls_date.git(cmd)
 
-class TestIgnoreGitConfig(object):
-
-    def setup(self):
-        global git_ls_date
-        self.__orig_git = git_ls_date.git
-
-        def git_side(cmd):
-            if cmd == "config --get-regexp git-ls-date":
-                return ""
-            else:
-                self.__orig_git(cmd)
-
-        git_ls_date.git = Mock(side_effect=git_side)
-
-    def teardown(self):
-        global git_ls_date
-        git_ls_date.git = self.__orig_git
-
+    @patch("git_ls_date.git", git_ignore_config)
     def test_date_default(self):
         config = git_ls_date.Configuration()
         config.argparse()
-
         eq_(config.date, "short")
 
-class TestGitConfig(object):
+    def git_return_relative(cmd):
+        if cmd == "config --get-regexp git-ls-date":
+            return "git-ls-date.date relative\n"
+        else:
+            return git_ls_date.git(cmd)
 
-    def setup(self):
-        global git_ls_date
-        self.__orig_git = git_ls_date.git
-
-        def git_side(cmd):
-            if cmd == "config --get-regexp git-ls-date":
-                return "git-ls-date.date relative\n"
-            else:
-                self.__orig_git(cmd)
-
-        git_ls_date.git = Mock(side_effect=git_side)
-
-    def teardown(self):
-        global git_ls_date
-        git_ls_date.git = self.__orig_git
-
+    @patch("git_ls_date.git", git_return_relative)
     def test_read_gitconfig(self):
         config = git_ls_date.Configuration()
         config.argparse()
-
         eq_(config.date, "relative")
-
 
 class TestGitCommandErrorException(object):
 
